@@ -7,7 +7,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Response, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, Query, Response, WebSocket, WebSocketDisconnect
 
 from .capabilities import build_capabilities
 from .copilot_resolver import CopilotResolveError, resolve as resolve_copilot
@@ -218,7 +218,7 @@ def create_api_router(
         return await asyncio.to_thread(_inspect_adb_status, profile)
 
     @router.post("/adb/test-screenshot")
-    async def adb_test_screenshot():
+    async def adb_test_screenshot(profile_name: str | None = Query(default=None)):
         adapter = runner.adapter
         get_image = getattr(adapter, "get_image", None)
         if not callable(get_image):
@@ -227,7 +227,7 @@ def create_api_router(
         # 否则用户改了触控模式后没有任何手段验证 —— 测试截图会一直报"未连接"，
         # 形成"换了模式也连不上"的假象。
         if not getattr(adapter, "is_connected", False):
-            profile = _resolve_status_profile(store, runner)
+            profile = _resolve_connect_profile(store, runner, profile_name)
             if profile is None:
                 return {"ok": False, "message": "没有可用的任务档案，请先在设置页保存一份配置"}
             connect = getattr(adapter, "connect", None)
@@ -650,6 +650,33 @@ def _resolve_status_profile(store: ProfileStore, runner: MaaRunnerService) -> Pr
             pass
     names = store.list_names()
     if len(names) != 1:
+        return None
+    try:
+        return store.load(names[0])
+    except (FileNotFoundError, ValueError):
+        return None
+
+
+def _resolve_connect_profile(
+    store: ProfileStore, runner: MaaRunnerService, preferred: str | None = None
+) -> Profile | None:
+    """给「测试截图」这类即时探测挑一份配置。
+
+    与 _resolve_status_profile 的差别：那个服务于状态展示，配置不止一份时
+    无法判断用户在说哪一份，所以返回 None；这里用户就在设置页按了按钮，
+    多份配置时随便挑一份真配置去连，也远比甩回「没有可用的任务档案」有用 ——
+    后者会让用户以为"换了触控模式也连不上"，而实际上只是配置太多没选中。
+    """
+    if preferred:
+        try:
+            return store.load(preferred)
+        except (FileNotFoundError, ValueError):
+            pass
+    profile = _resolve_status_profile(store, runner)
+    if profile is not None:
+        return profile
+    names = store.list_names()
+    if not names:
         return None
     try:
         return store.load(names[0])

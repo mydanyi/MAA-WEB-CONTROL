@@ -35,7 +35,11 @@ async function runSettingsScreenshotTest() {
   if (resultEl) resultEl.textContent = "截图测试中……";
   try {
     const t0 = Date.now();
-    const result = await api("/api/adb/test-screenshot", { method: "POST" });
+    // 带上当前正在编辑的档案名：配置不止一份时，服务端才知道该拿哪份去连。
+    // 不带的话服务端只能报「没有可用的任务档案」，用户会误以为换了触控模式也连不上。
+    const profileName = typeof state !== "undefined" && state.profile?.name ? state.profile.name : "";
+    const query = profileName ? `?profile_name=${encodeURIComponent(profileName)}` : "";
+    const result = await api(`/api/adb/test-screenshot${query}`, { method: "POST" });
     const elapsed = Date.now() - t0;
     if (resultEl) {
       const benchmark = formatScreenshotBenchmark(result.benchmark);
