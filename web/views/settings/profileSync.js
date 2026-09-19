@@ -44,8 +44,8 @@ function syncSettingsFromProfile() {
 
 // profile 里存的可能是归一化后的 "minitouch"/"maatouch"，下拉框的值域却是中文标签。
 const TOUCH_MODE_LABELS = {
-  minitouch: "Minitouch（默认）",
-  maatouch: "MaaTouch（实验功能）",
+  minitouch: "Minitouch",
+  maatouch: "MaaTouch（默认）",
   adb: "ADB Input（不推荐使用）",
   maaframework: "MaaFramework（实验功能）"
 };

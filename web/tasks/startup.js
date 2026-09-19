@@ -35,7 +35,7 @@ function collectStartUpParams() {
   addValue(params, "account", "paramAccount", "");
   addValue(params, "client_type", "paramClientType", "Official");
   addValue(params, "connection", "paramConnection", "雷电模拟器");
-  addValue(params, "touch_mode", "paramTouchMode", "Minitouch（默认）");
+  addValue(params, "touch_mode", "paramTouchMode", "MaaTouch（默认）");
   addBool(params, "start_game_enabled", "start_game_enabled");
   addNumber(params, "startup_retry_times", "paramStartupRetryTimes", 1);
   addValue(params, "startup_retry_command_a", "paramStartupRetryCommandA", "");

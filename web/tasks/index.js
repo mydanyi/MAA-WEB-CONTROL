@@ -28,7 +28,7 @@ const STARTUP_CLIENT_TYPES = [
   { label: "繁中服 (txwy)", value: "txwy" }
 ];
 const CONNECTION_PRESETS = ["通用模式", "蓝叠模拟器", "MuMu 模拟器", "雷电模拟器", "应用宝模拟器", "Android 虚拟设备（AVD）", "夜神模拟器", "逍遥模拟器", "PC 端", "WSA 旧版本", "兼容模式", "第二分辨率", "通用模式（屏蔽异常输出）"];
-const TOUCH_MODES = ["Minitouch（默认）", "MaaTouch（实验功能）", "ADB Input（不推荐使用）", "MaaFramework（实验功能）"];
+const TOUCH_MODES = ["MaaTouch（默认）", "Minitouch", "ADB Input（不推荐使用）", "MaaFramework（实验功能）"];
 const INFRAST_MODES = ["常规模式", "队列轮换", "自定义基建配置"];
 const DRONE_OPTIONS = ["不使用无人机", "贸易站-龙门币", "贸易站-合成玉", "制造站-经验书", "制造站-赤金", "制造站-源石碎片", "制造站-芯片组"];
 const STAGE_OPTIONS = [
@@ -222,7 +222,7 @@ function taskSupportsAdvanced(type) {
 function builtinDefaultParams(type) {
   if (type === "Fight") return { stage: "CurrentStage", stage_plan: ["CurrentStage"], medicine: 999, stone: 999, times: 5, series: 0, use_alternate_stage: false };
   if (type === "Custom") return { task_names: [] };
-  if (type === "StartUp") return { client_type: "Official", start_game_enabled: true, connection: "雷电模拟器", touch_mode: "Minitouch（默认）" };
+  if (type === "StartUp") return { client_type: "Official", start_game_enabled: true, connection: "雷电模拟器", touch_mode: "MaaTouch（默认）" };
   if (type === "Recruit") return { auto_expedited: false, refresh: true, confirm_3: true, confirm_4: true, max_times: 99 };
   if (type === "Infrast") return { mode: "常规模式", drone: "贸易站-龙门币", mood: 30, facilities: allFacilities() };
   if (type === "Mall") return { visit_friends: supportsVisitAsMallSubtask(), shopping: true, buy_first: ["招聘许可"], blacklist: ["碳素", "家具零件"] };

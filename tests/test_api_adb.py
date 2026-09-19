@@ -100,6 +100,7 @@ class AdbApiTest(unittest.TestCase):
 
     def test_adb_test_screenshot_includes_connection_benchmark(self):
         class ScreenshotAdapter:
+            is_connected = True  # 模拟已连接状态（未连接时会先走自动重连分支）
             screenshot_benchmark = {
                 "kind": "screenshot",
                 "method": "LDExtras",
@@ -125,6 +126,69 @@ class AdbApiTest(unittest.TestCase):
         self.assertEqual(payload["size"], 3)
         self.assertEqual(payload["benchmark"]["method"], "LDExtras")
         self.assertEqual(payload["benchmark"]["alternatives"][0]["cost"], "931")
+
+    def test_adb_test_screenshot_reconnects_when_not_connected(self):
+        """未连接时应先用当前 profile 触发一次 connect，而不是直接报「未连接」。
+
+        回归 BUG-012：connect 失败后 _asst 不可用，用户切换触控模式后点
+        「测试截图」恒报未连接，形成"换了模式也连不上"的假象。
+        """
+
+        class ReconnectAdapter:
+            def __init__(self):
+                self.is_connected = False
+                self.connect_calls = 0
+
+            async def connect(self, profile):
+                self.connect_calls += 1
+                self.is_connected = True
+                return True
+
+            async def get_image(self):
+                return b"png"
+
+        adapter = ReconnectAdapter()
+        with tempfile.TemporaryDirectory() as directory:
+            store = ProfileStore(Path(directory))
+            store.save(Profile(name="daily", adb=AdbConfig(address="127.0.0.1:5555")))
+            events = EventBus()
+            logs = MaaLogService(events)
+            runner = MaaRunnerService(adapter, events, logs)
+            app = FastAPI()
+            app.include_router(create_api_router(store, runner, events, logs))
+            response = TestClient(app).post("/api/adb/test-screenshot")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["ok"])
+        self.assertEqual(adapter.connect_calls, 1)
+
+    def test_adb_test_screenshot_reports_connect_failure_reason(self):
+        """自动重连失败时要把失败原因带出来（如触控模式不可用），不能含糊。"""
+
+        class FailingAdapter:
+            is_connected = False
+
+            async def connect(self, profile):
+                return False
+
+            async def get_image(self):
+                return b"png"
+
+        with tempfile.TemporaryDirectory() as directory:
+            store = ProfileStore(Path(directory))
+            store.save(Profile(name="daily", adb=AdbConfig(address="127.0.0.1:5555")))
+            events = EventBus()
+            logs = MaaLogService(events)
+            runner = MaaRunnerService(FailingAdapter(), events, logs)
+            app = FastAPI()
+            app.include_router(create_api_router(store, runner, events, logs))
+            response = TestClient(app).post("/api/adb/test-screenshot")
+
+        payload = response.json()
+        self.assertFalse(payload["ok"])
+        self.assertIn("连接失败", payload["message"])
+        self.assertIn("触控模式", payload["message"])
 
 
 if __name__ == "__main__":

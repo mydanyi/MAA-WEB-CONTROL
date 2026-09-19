@@ -195,8 +195,10 @@ RECLAMATION_INCREMENT_MODE_VALUES = {
 }
 
 TOUCH_MODE_VALUES = {
-    "Minitouch（默认）": "minitouch",
-    "MaaTouch（实验功能）": "maatouch",
+    "MaaTouch（默认）": "maatouch",
+    "MaaTouch（实验功能）": "maatouch",   # 旧标签兼容
+    "Minitouch（默认）": "minitouch",    # 旧标签兼容
+    "Minitouch": "minitouch",
     "ADB Input（不推荐使用）": "adb",
     "MaaFramework（实验功能）": "maaframework",
 }

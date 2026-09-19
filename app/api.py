@@ -223,6 +223,22 @@ def create_api_router(
         get_image = getattr(adapter, "get_image", None)
         if not callable(get_image):
             return {"ok": False, "message": "截图接口不可用（当前为 DryRun 模式或未连接）"}
+        # 未连接时先用当前配置发起一次连接（含触控模式初始化），
+        # 否则用户改了触控模式后没有任何手段验证 —— 测试截图会一直报"未连接"，
+        # 形成"换了模式也连不上"的假象。
+        if not getattr(adapter, "is_connected", False):
+            profile = _resolve_status_profile(store, runner)
+            if profile is None:
+                return {"ok": False, "message": "没有可用的任务档案，请先在设置页保存一份配置"}
+            connect = getattr(adapter, "connect", None)
+            if not callable(connect):
+                return {"ok": False, "message": "截图接口不可用（当前为 DryRun 模式或未连接）"}
+            try:
+                connected = await connect(profile)
+            except Exception as exc:
+                return {"ok": False, "message": f"连接失败: {exc}"}
+            if not connected:
+                return {"ok": False, "message": "连接失败，请检查 ADB 地址与触控模式（部分容器镜像不支持 Minitouch，可换 MaaTouch）"}
         try:
             image_data = await get_image()
             if image_data:

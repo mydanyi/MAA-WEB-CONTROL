@@ -29,7 +29,7 @@ class AdbConfig(BaseModel):
     address: str = "127.0.0.1:5555"
     adb_path: str = "adb"
     client_type: str = "Official"
-    touch_mode: str = "minitouch"
+    touch_mode: str = "maatouch"
     deployment_with_pause: bool = False
     adb_lite_enabled: bool = False
     kill_adb_on_exit: bool = False
