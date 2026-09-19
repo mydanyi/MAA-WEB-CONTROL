@@ -190,6 +190,70 @@ class AdbApiTest(unittest.TestCase):
         self.assertIn("连接失败", payload["message"])
         self.assertIn("触控模式", payload["message"])
 
+    def test_adb_test_screenshot_uses_the_named_profile(self):
+        """配置不止一份时，用前端传来的档案名去连，别报「没有可用的任务档案」。
+
+        回归：设置页有 shoucai / shualizhi 两份配置，点「截图测试」拿到的是
+        "没有可用的任务档案"，用户看到的是"换了触控模式也连不上"。
+        """
+        seen = []
+
+        class RecordingAdapter:
+            def __init__(self):
+                self.is_connected = False
+
+            async def connect(self, profile):
+                seen.append(profile.name)
+                self.is_connected = True
+                return True
+
+            async def get_image(self):
+                return b"png"
+
+        with tempfile.TemporaryDirectory() as directory:
+            store = ProfileStore(Path(directory))
+            store.save(Profile(name="daily-shoucai", adb=AdbConfig(address="127.0.0.1:5555")))
+            store.save(Profile(name="daily-shualizhi", adb=AdbConfig(address="127.0.0.1:5556")))
+            events = EventBus()
+            logs = MaaLogService(events)
+            runner = MaaRunnerService(RecordingAdapter(), events, logs)
+            app = FastAPI()
+            app.include_router(create_api_router(store, runner, events, logs))
+            response = TestClient(app).post("/api/adb/test-screenshot?profile_name=daily-shualizhi")
+
+        self.assertTrue(response.json()["ok"])
+        self.assertEqual(seen, ["daily-shualizhi"])
+
+    def test_adb_test_screenshot_still_connects_without_a_named_profile(self):
+        """没传档案名、配置又不止一份时也要能连：随便挑一份，别把用户堵在门口。"""
+        class AnyProfileAdapter:
+            def __init__(self):
+                self.is_connected = False
+                self.connected_profile = None
+
+            async def connect(self, profile):
+                self.connected_profile = profile.name
+                self.is_connected = True
+                return True
+
+            async def get_image(self):
+                return b"png"
+
+        adapter = AnyProfileAdapter()
+        with tempfile.TemporaryDirectory() as directory:
+            store = ProfileStore(Path(directory))
+            store.save(Profile(name="daily-shoucai", adb=AdbConfig(address="127.0.0.1:5555")))
+            store.save(Profile(name="daily-shualizhi", adb=AdbConfig(address="127.0.0.1:5556")))
+            events = EventBus()
+            logs = MaaLogService(events)
+            runner = MaaRunnerService(adapter, events, logs)
+            app = FastAPI()
+            app.include_router(create_api_router(store, runner, events, logs))
+            response = TestClient(app).post("/api/adb/test-screenshot")
+
+        self.assertTrue(response.json()["ok"])
+        self.assertIn(adapter.connected_profile, {"daily-shoucai", "daily-shualizhi"})
+
 
 if __name__ == "__main__":
     unittest.main()
