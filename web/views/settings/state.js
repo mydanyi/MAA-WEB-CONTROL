@@ -106,7 +106,7 @@ const SETTINGS_STATE = {
   connectConfig: "LDPlayer",
   adbAddress: "127.0.0.1:5555",
   adbPath: "adb",
-  touchMode: "Minitouch（默认）",
+  touchMode: "MaaTouch（默认）",
   deploymentWithPause: false,
   adbLiteEnabled: false,
   killAdbOnExit: false,

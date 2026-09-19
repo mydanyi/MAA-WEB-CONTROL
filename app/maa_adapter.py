@@ -939,8 +939,10 @@ def _normalize_client_type(value: Any) -> str:
 
 
 TOUCH_MODE_ALIASES = {
-    "Minitouch（默认）": "minitouch",
-    "MaaTouch（实验功能）": "maatouch",
+    "MaaTouch（默认）": "maatouch",
+    "MaaTouch（实验功能）": "maatouch",   # 旧标签兼容
+    "Minitouch（默认）": "minitouch",    # 旧标签兼容（默认标注已挪到 MaaTouch）
+    "Minitouch": "minitouch",
     "ADB Input（不推荐使用）": "adb",
     "MaaFramework（实验功能）": "MaaFwAdb",
     "maaframework": "MaaFwAdb",
@@ -949,8 +951,8 @@ TOUCH_MODE_ALIASES = {
 
 
 def _normalize_touch_mode(value: Any) -> str:
-    text = str(value or "minitouch").strip()
-    return TOUCH_MODE_ALIASES.get(text, TOUCH_MODE_ALIASES.get(text.lower(), text or "minitouch"))
+    text = str(value or "maatouch").strip()
+    return TOUCH_MODE_ALIASES.get(text, TOUCH_MODE_ALIASES.get(text.lower(), text or "maatouch"))
 
 
 def _bool_option(value: Any) -> str:

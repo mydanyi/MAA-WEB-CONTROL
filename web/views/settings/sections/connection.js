@@ -20,7 +20,7 @@ function renderConnectionSection() {
     ${isLd && SETTINGS_STATE.ldExtrasEnabled ? checkLine("手动填写「实例编号」", false, "", "ldManualIndex") : ""}
     ${isLd && SETTINGS_STATE.ldExtrasEnabled && SETTINGS_STATE.ldManualIndex ? fieldRow("实例编号", numberBox(String(SETTINGS_STATE.ldExtrasIndex), "settingsControlS", "ldExtrasIndex")) : ""}
     ${isMumu ? `<p class="settingsGlobalTip">MuMu 截图增强 / 网络桥接依赖 Windows 原生 DLL，Web 版<span class="unsupportedBadge">暂未接入</span></p>` : ""}
-    ${fieldRow("触控模式", selectBox(["Minitouch（默认）", "MaaTouch（实验功能）", "ADB Input（不推荐使用）", "MaaFramework（实验功能）"], SETTINGS_STATE.touchMode, "touchMode"))}
+    ${fieldRow("触控模式", selectBox(["MaaTouch（默认）", "Minitouch", "ADB Input（不推荐使用）", "MaaFramework（实验功能）"], SETTINGS_STATE.touchMode, "touchMode"))}
     <div class="settingsInlinePair">${checkLine("退出时释放 ADB", false, "", "killAdbOnExit")}${checkLine("使用 ADB Lite（实验性功能）", false, "", "adbLiteEnabled")}</div>
     ${checkLine("连接失败后重启 ADB Server", true, "MaaCore 第一次连接失败时自动执行 adb kill-server 后重试。", "allowAdbRestart")}
     ${checkLine("连接失败后强制结束 ADB 进程", false, "Windows 上执行 taskkill /F /IM adb.exe，Linux 上执行 pkill -9 adb，作为最后的兜底。", "allowAdbHardRestart")}

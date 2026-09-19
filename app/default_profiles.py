@@ -116,7 +116,7 @@ def _startup_params() -> dict[str, object]:
         "auto_detect": True,
         "detect_every_time": True,
         "connection": "雷电模拟器",
-        "touch_mode": "Minitouch（默认）",
+        "touch_mode": "MaaTouch（默认）",
     }
 
 
