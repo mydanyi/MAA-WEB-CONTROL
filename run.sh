@@ -39,6 +39,13 @@ if [[ ! -f "$STAMP_FILE" || pyproject.toml -nt "$STAMP_FILE" ]]; then
   install_dependencies
 fi
 
+# 走飞牛统一网关时监听 unix socket：不占端口，鉴权由网关兜。
+# umask 000 是为了让宿主上的网关进程（不是同一个 uid）连得进来。
+if [[ -n "${MAA_WEB_SOCKET:-}" ]]; then
+  umask 000
+  exec "$VENV_PY" -m uvicorn app.main:app --uds "${MAA_WEB_SOCKET}"
+fi
+
 exec "$VENV_PY" -m uvicorn app.main:app \
   --host "${MAA_WEB_HOST:-0.0.0.0}" \
   --port "${MAA_WEB_PORT:-8000}"

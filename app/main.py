@@ -119,3 +119,30 @@ class NoCacheStaticFiles(StaticFiles):
 
 
 app.mount("/", NoCacheStaticFiles(directory=WEB_DIR, html=True), name="web")
+
+
+# ---------------------------------------------------------------- 飞牛网关兼容
+# 桌面入口走飞牛统一网关（app/ui/config 里的 iframe + gatewaySocket）时，
+# 请求可能是带着 /app/maa-fnos 前缀进来的 —— 实测飞牛网关不负责剥掉它。
+# 这里做成"带了就剥、没带就放行"，两种网关行为都能工作。
+GATEWAY_PREFIX = "/app/maa-fnos"
+
+
+class StripGatewayPrefixMiddleware:
+    def __init__(self, app, prefix: str = GATEWAY_PREFIX) -> None:
+        self.app = app
+        self.prefix = prefix
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] in ("http", "websocket"):
+            path = scope.get("path", "")
+            if path == self.prefix or path.startswith(self.prefix + "/"):
+                rest = path[len(self.prefix):] or "/"
+                scope = dict(scope)
+                scope["path"] = rest
+                scope["raw_path"] = rest.encode("utf-8")
+                scope["root_path"] = self.prefix
+        await self.app(scope, receive, send)
+
+
+app.add_middleware(StripGatewayPrefixMiddleware)

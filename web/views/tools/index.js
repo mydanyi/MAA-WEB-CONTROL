@@ -773,7 +773,7 @@ function startPeepSocket() {
   peepMeasuredFps = 0;
   peepLastFrameAt = 0;
   const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-  peepSocket = new WebSocket(`${protocol}//${location.host}/api/peep`);
+  peepSocket = new WebSocket(`${protocol}//${location.host}${apiBase()}/api/peep`);
   peepSocket.onopen = () => sendPeepRequest();
   peepSocket.onmessage = (event) => {
     let data = null;

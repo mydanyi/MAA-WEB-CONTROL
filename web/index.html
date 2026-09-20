@@ -1,28 +1,49 @@
 <!doctype html>
 <html lang="zh-CN">
   <head>
+<script>
+// 页面挂在飞牛网关的 /app/<appname>/ 下时，接口/资源都要带着这个前缀。
+// 少一个尾斜杠会让相对路径解析错位，这里先自修正一次。
+(function () {
+  var p = location.pathname;
+  if (p.indexOf("/app/") === 0 && p.charAt(p.length - 1) !== "/") {
+    location.replace(p + "/" + location.search + location.hash);
+    return;
+  }
+})();
+function apiBase() {
+  var m = location.pathname.match(/^\/app\/[^\/]+/);
+  return m ? m[0] : "";
+}
+function withBase(path) {
+  if (!path || path.charAt(0) !== "/") return path;
+  return apiBase() + path;
+}
+</script>
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>MAA Web Control</title>
-    <link rel="icon" href="/newlogo.ico" />
-    <link rel="stylesheet" href="/styles/base.css" />
-    <link rel="stylesheet" href="/styles/layout.css" />
-    <link rel="stylesheet" href="/styles/basement.css" />
-    <link rel="stylesheet" href="/styles/logs.css" />
-    <link rel="stylesheet" href="/styles/forms.css" />
-    <link rel="stylesheet" href="/styles/tools.css" />
-    <link rel="stylesheet" href="/styles/copilot.css" />
-    <link rel="stylesheet" href="/styles/settings.css" />
+    <link rel="icon" href="newlogo.ico" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/layout.css" />
+    <link rel="stylesheet" href="styles/basement.css" />
+    <link rel="stylesheet" href="styles/logs.css" />
+    <link rel="stylesheet" href="styles/forms.css" />
+    <link rel="stylesheet" href="styles/tools.css" />
+    <link rel="stylesheet" href="styles/copilot.css" />
+    <link rel="stylesheet" href="styles/settings.css" />
   </head>
   <body>
     <div class="windowShell">
       <header class="titlebar">
         <div class="windowTitle">
-          <img class="appIcon" src="/newlogo.ico" alt="" />
+          <img class="appIcon" src="newlogo.ico" alt="" />
           <span id="windowTitleText">MAA Web</span>
         </div>
         <div class="windowTools">
           <button id="refreshButton" type="button" title="刷新全部数据">⟳</button>
+          <button type="button" title="在新窗口打开（独立网页）" onclick="window.open(location.href, '_blank')">⧉</button>
           <span class="windowDecor" aria-hidden="true">─</span>
           <span class="windowDecor" aria-hidden="true">□</span>
           <span class="windowDecor" aria-hidden="true">×</span>
@@ -127,68 +148,68 @@
     </div>
 
     <!-- Core infrastructure -->
-    <script src="/core/storage.js"></script>
-    <script src="/core/featureRegistry.js"></script>
-    <script src="/core/state.js"></script>
-    <script src="/core/api.js"></script>
+    <script src="core/storage.js"></script>
+    <script src="core/featureRegistry.js"></script>
+    <script src="core/state.js"></script>
+    <script src="core/api.js"></script>
 
     <!-- Shared utilities -->
-    <script src="/shared/toast.js"></script>
-    <script src="/shared/logCards.js"></script>
-    <script src="/shared/logEvents.js"></script>
+    <script src="shared/toast.js"></script>
+    <script src="shared/logCards.js"></script>
+    <script src="shared/logEvents.js"></script>
 
     <!-- Task type forms (index first for shared helpers, then per-type) -->
-    <script src="/tasks/index.js"></script>
-    <script src="/tasks/startup.js"></script>
-    <script src="/tasks/fight.js"></script>
-    <script src="/tasks/recruit.js"></script>
-    <script src="/tasks/infrast.js"></script>
-    <script src="/tasks/mall.js"></script>
-    <script src="/tasks/award.js"></script>
-    <script src="/tasks/custom.js"></script>
-    <script src="/tasks/roguelike.js"></script>
-    <script src="/tasks/reclamation.js"></script>
-    <script src="/tasks/userdata.js"></script>
+    <script src="tasks/index.js"></script>
+    <script src="tasks/startup.js"></script>
+    <script src="tasks/fight.js"></script>
+    <script src="tasks/recruit.js"></script>
+    <script src="tasks/infrast.js"></script>
+    <script src="tasks/mall.js"></script>
+    <script src="tasks/award.js"></script>
+    <script src="tasks/custom.js"></script>
+    <script src="tasks/roguelike.js"></script>
+    <script src="tasks/reclamation.js"></script>
+    <script src="tasks/userdata.js"></script>
 
     <!-- Basement view (一键长草) -->
-    <script src="/views/basement/profiles.js"></script>
-    <script src="/views/basement/taskList.js"></script>
-    <script src="/views/basement/taskEditor.js"></script>
-    <script src="/views/basement/postAction.js"></script>
-    <script src="/views/basement/runner.js"></script>
-    <script src="/views/basement/stageTips.js"></script>
-    <script src="/views/basement/index.js"></script>
+    <script src="views/basement/profiles.js"></script>
+    <script src="views/basement/taskList.js"></script>
+    <script src="views/basement/taskEditor.js"></script>
+    <script src="views/basement/postAction.js"></script>
+    <script src="views/basement/runner.js"></script>
+    <script src="views/basement/stageTips.js"></script>
+    <script src="views/basement/index.js"></script>
 
     <!-- Copilot view -->
-    <script src="/views/copilot/index.js"></script>
+    <script src="views/copilot/index.js"></script>
 
     <!-- Tools view -->
-    <script src="/views/tools/index.js"></script>
+    <script src="views/tools/index.js"></script>
 
     <!-- Settings view (helpers must load before state.js, sections any order, index last) -->
-    <script src="/views/settings/helpers.js"></script>
-    <script src="/views/settings/state.js"></script>
-    <script src="/views/settings/profileSync.js"></script>
-    <script src="/views/settings/scroll.js"></script>
-    <script src="/views/settings/scheduler.js"></script>
-    <script src="/views/settings/events.js"></script>
-    <script src="/views/settings/sections/config.js"></script>
-    <script src="/views/settings/sections/timer.js"></script>
-    <script src="/views/settings/sections/game.js"></script>
-    <script src="/views/settings/sections/performance.js"></script>
-    <script src="/views/settings/sections/connection.js"></script>
-    <script src="/views/settings/sections/maacore.js"></script>
-    <script src="/views/settings/sections/startup.js"></script>
-    <script src="/views/settings/sections/ui.js"></script>
-    <script src="/views/settings/sections/background.js"></script>
-    <script src="/views/settings/sections/remote.js"></script>
-    <script src="/views/settings/sections/notification.js"></script>
-    <script src="/views/settings/sections/update.js"></script>
-    <script src="/views/settings/sections/issue.js"></script>
-    <script src="/views/settings/sections/about.js"></script>
-    <script src="/views/settings/index.js"></script>
+    <script src="views/settings/helpers.js"></script>
+    <script src="views/settings/state.js"></script>
+    <script src="views/settings/profileSync.js"></script>
+    <script src="views/settings/scroll.js"></script>
+    <script src="views/settings/scheduler.js"></script>
+    <script src="views/settings/events.js"></script>
+    <script src="views/settings/sections/config.js"></script>
+    <script src="views/settings/sections/timer.js"></script>
+    <script src="views/settings/sections/game.js"></script>
+    <script src="views/settings/sections/performance.js"></script>
+    <script src="views/settings/sections/connection.js"></script>
+    <script src="views/settings/sections/maacore.js"></script>
+    <script src="views/settings/sections/startup.js"></script>
+    <script src="views/settings/sections/ui.js"></script>
+    <script src="views/settings/sections/background.js"></script>
+    <script src="views/settings/sections/remote.js"></script>
+    <script src="views/settings/sections/notification.js"></script>
+    <script src="views/settings/sections/update.js"></script>
+    <script src="views/settings/sections/issue.js"></script>
+    <script src="views/settings/sections/about.js"></script>
+    <script src="views/settings/index.js"></script>
 
     <!-- Boot last: wires everything and calls boot() -->
-    <script src="/core/boot.js"></script>
+    <script src="core/boot.js"></script>
   </body>
 </html>
