@@ -137,10 +137,13 @@ class StripGatewayPrefixMiddleware:
         if scope["type"] in ("http", "websocket"):
             path = scope.get("path", "")
             if path == self.prefix or path.startswith(self.prefix + "/"):
-                rest = path[len(self.prefix):] or "/"
                 scope = dict(scope)
-                scope["path"] = rest
-                scope["raw_path"] = rest.encode("utf-8")
+                # 只把前缀记进 root_path，path 原样保留。
+                # Starlette 的 Route / Mount / StaticFiles 匹配走的都是 get_route_path()
+                # （= path 去掉 root_path），所以匹配结果跟「先把 path 剥掉」一模一样；
+                # 但需要拼 URL 的地方（StaticFiles 目录补斜杠用的是 URL(scope=...)）只读
+                # scope["path"]、不看 root_path，留着前缀 Location 才会指回
+                # /app/maa-fnos/... ，否则会把浏览器甩到网关根上去。
                 scope["root_path"] = self.prefix
         await self.app(scope, receive, send)
 

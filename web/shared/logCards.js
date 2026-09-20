@@ -17,9 +17,15 @@ function logEscape(value) {
 // 页面挂在飞牛网关的 /app/<appname>/ 下时这些地址必须带上同样的前缀，
 // 否则请求会打到网关根、图片必然 404。withBase 由 index.html 的 head 提供，
 // 万一没在那个上下文里就保持原样，不抛错。
+//
+// 必须幂等：同一张卡片会被 normalize 两次（upsertLogCard() 存下来时一次、
+// renderLogCards() 渲染前又一次），不带判断就会变成 /app/x/app/x/... 全部 404。
 function logWithBase(path) {
   if (!path || path.charAt(0) !== "/") return path;
-  return typeof withBase === "function" ? withBase(path) : path;
+  if (typeof withBase !== "function") return path;
+  const base = typeof apiBase === "function" ? apiBase() : "";
+  if (base && (path === base || path.indexOf(base + "/") === 0)) return path;
+  return withBase(path);
 }
 
 function normalizeLogCard(card = {}) {
