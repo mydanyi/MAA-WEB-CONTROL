@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="zh-CN">
   <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 <script>
 // 页面挂在飞牛网关的 /app/<appname>/ 下时，接口/资源都要带着这个前缀。
 // 少一个尾斜杠会让相对路径解析错位，这里把地址补正。
@@ -24,8 +26,49 @@ function withBase(path) {
 }
 </script>
 
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<script>
+// ?diag=1 时把视口相关实测数字贴在页面顶部，方便真机截图定位；不带参数永远不显示。
+(function () {
+  if (!/[?&]diag=1(&|$)/.test(location.search)) return;
+  function render() {
+    var old = document.getElementById("__maaDiag");
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    var vv = window.visualViewport;
+    var shell = document.querySelector(".windowShell");
+    var navs = document.querySelectorAll(".mainNav .navButton");
+    var lastTab = navs.length ? navs[navs.length - 1].getBoundingClientRect() : null;
+    var rows = [
+      ["地址", location.pathname + location.search],
+      ["innerWidth x innerHeight", window.innerWidth + " x " + window.innerHeight],
+      ["documentElement.clientWidth", document.documentElement.clientWidth],
+      ["body.clientWidth", document.body ? document.body.clientWidth : "-"],
+      ["screen.width / availWidth", window.screen.width + " / " + window.screen.availWidth],
+      ["devicePixelRatio", window.devicePixelRatio],
+      ["visualViewport w / h / scale", vv ? vv.width + " / " + vv.height + " / " + vv.scale : "-"],
+      ["outerWidth", window.outerWidth],
+      ["matchMedia(max-width:1000px)", window.matchMedia("(max-width:1000px)").matches],
+      ["documentElement.scrollWidth", document.documentElement.scrollWidth],
+      ["shell 实际宽", shell ? Math.round(shell.getBoundingClientRect().width) : "-"],
+      ["tab 个数 / 最后一个 tab 右边界", navs.length + " / " + (lastTab ? Math.round(lastTab.right) : "-")],
+      ["UA", navigator.userAgent]
+    ];
+    var box = document.createElement("pre");
+    box.id = "__maaDiag";
+    box.style.cssText =
+      "position:fixed;left:0;top:0;z-index:2147483647;margin:0;padding:8px 10px;" +
+      "background:#000;color:#0f0;font:11px/1.55 Consolas,monospace;" +
+      "white-space:pre-wrap;word-break:break-all;border-bottom:2px solid #0f0";
+    box.style.width = Math.min(window.screen.width || 1e9, window.innerWidth || 1e9) + "px";
+    box.textContent = rows.map(function (r) { return r[0] + ": " + r[1]; }).join("\n");
+    document.body.appendChild(box);
+  }
+  // 导航 tab 是 boot.js 稍后才渲染的（DOMContentLoaded/load 时还是空的），
+  // 所以除了这两个事件，再补几个延时重绘，保证真机截图时那一行有数。
+  window.addEventListener("DOMContentLoaded", render);
+  window.addEventListener("load", render);
+  [300, 1000, 2500, 4000].forEach(function (ms) { setTimeout(render, ms); });
+})();
+</script>
     <title>MAA Web Control</title>
     <link rel="icon" href="newlogo.ico" />
     <link rel="stylesheet" href="styles/base.css" />
