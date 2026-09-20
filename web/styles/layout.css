@@ -8,6 +8,15 @@
   background: var(--bg);
 }
 
+/* 上面这行只定义了行，列是隐式的 auto 列。grid 子项默认 min-width:auto，
+   也就是「不小于自己的内容最小宽」：标题栏的 min-content 在窄屏能到 400+（标题文字
+   不换行 + 右侧几个按钮），整条隐式列就被顶到 400+，nav 跟着一起变宽，
+   手机 363px 视口下第 4 个 tab「设置」直接被挤出屏幕且滚不到（html 是 overflow:hidden）。
+   放开压缩，标题按 .windowTitle span 既有的 ellipsis 规则截断。 */
+.windowShell > * {
+  min-width: 0;
+}
+
 .titlebar {
   display: flex;
   align-items: center;
