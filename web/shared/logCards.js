@@ -13,6 +13,15 @@ function logEscape(value) {
     .replaceAll('"', "&quot;");
 }
 
+// 卡片里的缩略图 / 原图地址是服务端给的根相对路径（/api/logs/thumbnails/...）。
+// 页面挂在飞牛网关的 /app/<appname>/ 下时这些地址必须带上同样的前缀，
+// 否则请求会打到网关根、图片必然 404。withBase 由 index.html 的 head 提供，
+// 万一没在那个上下文里就保持原样，不抛错。
+function logWithBase(path) {
+  if (!path || path.charAt(0) !== "/") return path;
+  return typeof withBase === "function" ? withBase(path) : path;
+}
+
 function normalizeLogCard(card = {}) {
   const items = Array.isArray(card.items) ? card.items.map(normalizeMaaLogItem).sort(byTime) : [];
   return {
@@ -21,8 +30,8 @@ function normalizeLogCard(card = {}) {
     start_time: card.start_time || items[0]?.time || "",
     end_time: card.end_time || items[items.length - 1]?.time || "",
     thumbnail_id: card.thumbnail_id || "",
-    thumbnail_url: card.thumbnail_url || (card.thumbnail_id ? `/api/logs/thumbnails/${card.thumbnail_id}` : ""),
-    original_url: card.original_url || "",
+    thumbnail_url: logWithBase(card.thumbnail_url || (card.thumbnail_id ? `/api/logs/thumbnails/${card.thumbnail_id}` : "")),
+    original_url: logWithBase(card.original_url || ""),
     show_thumbnail: Boolean(card.show_thumbnail ?? card.thumbnail_id)
   };
 }

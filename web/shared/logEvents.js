@@ -93,7 +93,12 @@ async function ensureMaaLogView() {
   if (!maaLogViewLoadPromise) {
     maaLogViewLoadPromise = new Promise((resolve) => {
       const script = document.createElement("script");
-      script.src = `/shared/logCards.js?v=${Date.now()}`;
+      // 这个回退路径正是在 logCards.js 没加载成功时用的，所以不能依赖它里面的东西；
+      // 前缀直接取自 index.html head 里的 withBase。
+      const scriptUrl = typeof withBase === "function"
+        ? withBase("/shared/logCards.js")
+        : "/shared/logCards.js";
+      script.src = `${scriptUrl}?v=${Date.now()}`;
       script.onload = () => resolve();
       script.onerror = () => resolve();
       document.body.appendChild(script);

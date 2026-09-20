@@ -3,12 +3,15 @@
   <head>
 <script>
 // 页面挂在飞牛网关的 /app/<appname>/ 下时，接口/资源都要带着这个前缀。
-// 少一个尾斜杠会让相对路径解析错位，这里先自修正一次。
+// 少一个尾斜杠会让相对路径解析错位，这里把地址补正。
+// 用 replaceState 而不是 location.replace：后者是整页重载，又发生在 head 解析期，
+// 会让容器重新决定一次视口。
 (function () {
   var p = location.pathname;
-  if (p.indexOf("/app/") === 0 && p.charAt(p.length - 1) !== "/") {
-    location.replace(p + "/" + location.search + location.hash);
-    return;
+  var lastSeg = p.slice(p.lastIndexOf("/") + 1);
+  // 只在「目录形式但少了尾斜杠」时补正，别把 xxx/index.html 也改成 xxx/index.html/
+  if (p.indexOf("/app/") === 0 && p.charAt(p.length - 1) !== "/" && lastSeg.indexOf(".") === -1) {
+    history.replaceState(null, "", p + "/" + location.search + location.hash);
   }
 })();
 function apiBase() {

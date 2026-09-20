@@ -40,9 +40,12 @@ if [[ ! -f "$STAMP_FILE" || pyproject.toml -nt "$STAMP_FILE" ]]; then
 fi
 
 # 走飞牛统一网关时监听 unix socket：不占端口，鉴权由网关兜。
-# umask 000 是为了让宿主上的网关进程（不是同一个 uid）连得进来。
+# socket 的权限不用在这里操心：uvicorn 绑定之后会自己 chmod 成 0666
+# （uvicorn/config.py 的 bind_socket()），宿主上另一个 uid 的网关进程照样连得进来。
+# 所以这里不放开 umask，反而要收紧 —— 否则 data/ 下的 notifications.json 之类
+# （含 webhook 凭据）会被建成本机其他用户可读可写。
 if [[ -n "${MAA_WEB_SOCKET:-}" ]]; then
-  umask 000
+  umask 077
   exec "$VENV_PY" -m uvicorn app.main:app --uds "${MAA_WEB_SOCKET}"
 fi
 
