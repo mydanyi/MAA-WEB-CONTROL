@@ -39,6 +39,17 @@ if [[ ! -f "$STAMP_FILE" || pyproject.toml -nt "$STAMP_FILE" ]]; then
   install_dependencies
 fi
 
+# 走飞牛统一网关时监听 unix socket：不占端口，鉴权由网关兜。
+# socket 的权限和属主交给 serve_socket.py 定（0600 + package 用户）——
+# 不能走 uvicorn 的 --uds，它会无条件 chmod 0666，配合本机可穿越的父目录，
+# 等于任何本地用户都能绕过网关直连 API。理由和实测数据见那个文件的注释。
+# 这里仍然收紧 umask：data/ 下的 notifications.json 之类（含 webhook 凭据）
+# 不能被建成本机其他用户可读可写。
+if [[ -n "${MAA_WEB_SOCKET:-}" ]]; then
+  umask 077
+  exec "$VENV_PY" "$ROOT_DIR/serve_socket.py"
+fi
+
 exec "$VENV_PY" -m uvicorn app.main:app \
   --host "${MAA_WEB_HOST:-0.0.0.0}" \
   --port "${MAA_WEB_PORT:-8000}"

@@ -183,7 +183,7 @@ function onDocumentKeyDown(event) {
 
 function connectEvents() {
   const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-  const socket = new WebSocket(`${protocol}//${location.host}/api/events`);
+  const socket = new WebSocket(`${protocol}//${location.host}${apiBase()}/api/events`);
   socket.onmessage = (message) => {
     try {
       addLogItem(JSON.parse(message.data));
