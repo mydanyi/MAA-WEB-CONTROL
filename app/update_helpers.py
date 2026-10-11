@@ -24,8 +24,10 @@ GUI_STAGE_ACTIVITY_URLS = (
     f"{MAA_API_FALLBACK_BASE}/{GUI_STAGE_ACTIVITY_API}",
 )
 # 在线资源增量：官方 API 的 tasks.json（MaaWpfGui 的 StageManager/MaaApiService 取的是同一个地址）。
-# 新活动关卡（如 YW-8）的任务定义不在 MaaResource 资源包里、也不在 core 自带的
-# resource/tasks/Stages/ 里，只在这个增量里能拿到，所以必须单独同步一份。
+# MaaResource 资源包只有数据层，任务定义不在其中；core 自带的 resource/tasks/Stages/ 随内核包
+# 发布，但内核包发布前会落后于在线数据。这个增量既用于补齐缺失的新活动任务（如 YW-8），
+# 也会覆盖同名任务做热修复（MaaCore TaskData.lazy_parse 合并/覆盖同名属性并 clear_tasks，
+# 不是纯新增），所以必须单独同步一份。
 INCREMENTAL_TASKS_API = "resource/tasks.json"
 INCREMENTAL_TASKS_URLS = (
     f"{MAA_API_BASE}/{INCREMENTAL_TASKS_API}",

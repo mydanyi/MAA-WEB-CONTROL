@@ -204,6 +204,11 @@ class CopilotUploadRequest(BaseModel):
     content: str
 
 
+class InfrastUploadRequest(BaseModel):
+    name: str = "infrast.json"
+    content: str
+
+
 class CopilotResolveRequest(BaseModel):
     code: str
 

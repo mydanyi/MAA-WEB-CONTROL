@@ -24,6 +24,7 @@ from .models import (
     CopilotResolveResponse,
     CopilotStartRequest,
     CopilotUploadRequest,
+    InfrastUploadRequest,
     NotificationConfig,
     NotificationTestRequest,
     PostAction,
@@ -360,6 +361,18 @@ def create_api_router(
         target = target_dir / safe_name
         target.write_text(json.dumps(content, ensure_ascii=False, indent=2), encoding="utf-8")
         return {"ok": True, "path": str(target), "name": safe_name}
+
+    # ── Infrast ────────────────────────────────────────────────────
+
+    @router.post("/infrast/upload")
+    async def upload_infrast(request: InfrastUploadRequest):
+        """自定义基建配置：内容由前端读出后上传到 MAA 能读到的位置。"""
+        try:
+            return await asyncio.to_thread(
+                _write_infrast_upload, project_root, request.name, request.content
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     # ── Copilot ────────────────────────────────────────────────────
 
@@ -833,6 +846,43 @@ def _write_tools_state(project_root: Path | None, payload: dict[str, Any]) -> di
 
 
 TOOLS_STATE_KEYS = {"depot", "operbox", "recruit"}
+
+
+def _safe_infrast_filename(name: str) -> str:
+    """只取最后一段文件名，避免 ``\\``/``/`` 目录穿越；空名回退 infrast.json。"""
+    candidate = Path((name or "").replace("\\", "/")).name
+    if candidate in ("", ".", ".."):
+        candidate = "infrast.json"
+    if candidate.lower().endswith(".json"):
+        # Linux options 只 rglob('*.json')，大小写混写的后缀会让文件漏出下拉，
+        # 这里统一成小写 .json（保留前面的文件名）。
+        candidate = candidate[:-5] + ".json"
+    else:
+        candidate += ".json"
+    return candidate
+
+
+def _write_infrast_upload(project_root: Path | None, name: str, content: str) -> dict[str, Any]:
+    try:
+        parsed = json.loads(content.lstrip("\ufeff"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"不是合法的基建配置 JSON：{exc}") from exc
+    if not isinstance(parsed, dict):
+        raise ValueError("基建配置的根节点必须是 JSON 对象")
+    plans = parsed.get("plans")
+    if not isinstance(plans, list) or not plans:
+        raise ValueError("基建配置缺少非空的 plans 列表")
+    if any(not isinstance(plan, dict) for plan in plans):
+        raise ValueError("基建配置 plans 中的每一项都必须是 JSON 对象")
+
+    safe_name = _safe_infrast_filename(name)
+    target_dir = (project_root or Path.cwd()) / "data" / "custom_infrast"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target = (target_dir / safe_name).resolve()
+    target.write_text(json.dumps(parsed, ensure_ascii=False, indent=2), encoding="utf-8")
+    return {"ok": True, "name": safe_name, "path": str(target)}
+
+
 async def events_socket(websocket: WebSocket, events: EventBus) -> None:
     await websocket.accept()
     queue = events.add_subscriber()

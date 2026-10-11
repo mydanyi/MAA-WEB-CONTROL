@@ -60,6 +60,11 @@ function onTaskEditorChange(event) {
   if (event.target.id === "paramInfrastFileSelect" && typeof onInfrastFileSelect === "function") {
     onInfrastFileSelect(event.target);
   }
+  if (event.target.id === "paramInfrastFileUpload") {
+    const file = event.target.files && event.target.files[0];
+    if (file && typeof uploadInfrastFile === "function") uploadInfrastFile(file);
+    return;
+  }
   const rerenderFields = new Set(["paramRoguelikeTheme", "paramRoguelikeStrategy", "paramReclamationStrategy", "paramInfrastMode"]);
   if (rerenderFields.has(event.target.id)) {
     collectTaskForm();
@@ -94,6 +99,12 @@ function onTaskEditorClick(event) {
   const stageButton = event.target.closest("[data-stage-action]");
   if (stageButton) {
     updateStagePlan(stageButton);
+    return;
+  }
+
+  const importButton = event.target.closest("#paramInfrastImport");
+  if (importButton) {
+    $("paramInfrastFileUpload")?.click();
     return;
   }
 

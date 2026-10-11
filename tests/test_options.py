@@ -80,7 +80,10 @@ class ResourceOptionsTest(unittest.TestCase):
         self.assertNotIn({"label": "双芯片", "value": "3213"}, options["by_client"]["Official"]["drops"])
         self.assertEqual(options["by_client"]["Official"]["drops"][0], {"label": "不选择", "value": ""})
         self.assertEqual(options["by_client"]["Official"]["copilot"]["files"][0]["relative_path"], "demo.json")
-        self.assertEqual(options["by_client"]["Official"]["infrast"]["custom_files"][0]["value"], "plan.json")
+        self.assertEqual(
+            options["by_client"]["Official"]["infrast"]["custom_files"][0]["value"],
+            str((core / "resource" / "custom_infrast" / "plan.json").resolve()),
+        )
         self.assertIn("萨卡兹", options["by_client"]["Official"]["roguelike"]["operators"])
         self.assertEqual(
             options["by_client"]["Official"]["stage_tips"]["text"],
