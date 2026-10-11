@@ -91,6 +91,10 @@ def build_ui_options(
         client["value"]: _build_client_options(source, client["value"], now_utc=now_utc)
         for client in CLIENT_OPTIONS
     }
+    # 自定义基建配置与所选客户端无关，构造完成后统一注入一次，避免逐客户端重复扫描。
+    custom_files = _load_custom_infrast_files(source, _custom_infrast_upload_dir(project_root))
+    for client in CLIENT_OPTIONS:
+        by_client[client["value"]]["infrast"] = {"custom_files": custom_files}
     fallback = by_client[DEFAULT_CLIENT_TYPE]
     return {
         **fallback,
@@ -111,7 +115,6 @@ def _build_client_options(source: Path, client_type: str, *, now_utc: datetime |
         "drops": _load_drop_options(source, resource_client),
         "copilot": {"files": _load_copilot_files(source)},
         "roguelike": {"operators": _load_roguelike_operators(source)},
-        "infrast": {"custom_files": _load_custom_infrast_files(source)},
     }
 
 
@@ -361,14 +364,25 @@ def _load_copilot_files(source: Path) -> list[dict[str, Any]]:
     return _scan_copilot_dir(root, root)
 
 
-def _load_custom_infrast_files(source: Path) -> list[dict[str, str]]:
-    root = source / "resource" / "custom_infrast"
-    if not root.exists():
-        return []
-    return [
-        {"label": str(path.relative_to(root)), "value": str(path.relative_to(root))}
-        for path in sorted(root.rglob("*.json"), key=lambda item: str(item).lower())
-    ]
+def _custom_infrast_upload_dir(project_root: Path | None) -> Path:
+    return (project_root or Path.cwd()) / "data" / "custom_infrast"
+
+
+def _load_custom_infrast_files(source: Path, upload_dir: Path | None = None) -> list[dict[str, str]]:
+    """内置与上传的自定义基建配置：label 保留相对嵌套名，value 一律给出绝对路径。"""
+    items: list[dict[str, str]] = []
+    builtin_root = source / "resource" / "custom_infrast"
+    if builtin_root.exists():
+        items.extend(
+            {"label": str(path.relative_to(builtin_root)), "value": str(path.resolve())}
+            for path in sorted(builtin_root.rglob("*.json"), key=lambda item: str(item).lower())
+        )
+    if upload_dir is not None and upload_dir.exists():
+        items.extend(
+            {"label": str(path.relative_to(upload_dir)), "value": str(path.resolve())}
+            for path in sorted(upload_dir.rglob("*.json"), key=lambda item: str(item).lower())
+        )
+    return items
 
 
 def _client_resource_dir(source: Path, client_type: str) -> Path:

@@ -402,8 +402,10 @@ class UpdateService:
 
         MaaCore 只在「已加载的资源里存在该关卡的任务定义」时接受这个关卡名
         （StageNavigationTask::set_stage_name -> Task.get(name) 命中，或名字匹配主线正则）。
-        新活动关卡（例如 YW-8）两个条件都不满足：定义既不在 MaaResource 资源包里
-        （它只有数据层），也不在 core 自带的 resource/tasks/Stages/ 里（那份随内核包发布）。
+        MaaResource 资源包只有数据层，任务定义不在其中；core 自带的 resource/tasks/Stages/
+        随内核包发布，但在内核包发布前会落后于在线数据。因此在线 tasks.json 既用于补齐缺失的
+        新活动任务（例如 YW-8），也会覆盖同名任务做热修复：MaaCore 的 TaskData.lazy_parse 会
+        合并/覆盖同名属性并 clear_tasks，不能当作纯新增。
 
         MaaWpfGui 的做法是：把官方 API 的 resource/tasks.json 落到 cache/resource/tasks/tasks.json，
         再把 cache 目录当作增量资源根加载（见 MaaWpfGui AsstProxy.LoadResource / CopyTasksJson）。
@@ -420,7 +422,7 @@ class UpdateService:
             try:
                 self._download_file(url, temp)
                 data = json.loads(temp.read_text(encoding="utf-8"))
-                if not isinstance(data, dict) or not data:
+                if not isinstance(data, dict):
                     raise RuntimeError("响应不是有效的任务增量 JSON")
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(temp, target)
